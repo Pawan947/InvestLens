@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InvestLens // Investment Intelligence</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Unauthenticated requests are redirected to login.html -->
+
+  <!-- App Header -->
+  <header id="app-header" class="app-header hidden">
+    <div class="header-logo">
+      <span class="logo-dot"></span>
+      <span class="logo-text">InvestLens</span>
+    </div>
+    <div class="header-meta">
+      <span id="user-display" class="user-email" style="margin-right: 15px; color: var(--text-muted); font-size: 0.85rem; display: none;"></span>
+      <button id="btn-signout" class="btn-action" style="display: none; padding: 0.35rem 0.75rem; font-size: 0.8rem; border-color: var(--border-color); background: transparent; cursor: pointer; margin-right: 15px;">
+        Sign Out
+      </button>
+      <span class="status-badge online">Active</span>
+    </div>
+  </header>
+
+  <main id="app-container" class="app-container hidden">
+    
+    <!-- Sidebar / Cached Reports Panel -->
+    <aside class="sidebar">
+      <div class="card sidebar-card">
+        <h3>Cached Reports</h3>
+        <p class="section-desc">Instantly load previously generated investment research dossiers.</p>
+        <div id="reports-list" class="reports-list">
+          <div class="no-reports">No reports cached yet.</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <div class="workspace">
+      
+      <!-- Control Panel -->
+      <section class="card control-card">
+        <h2>Company Research</h2>
+        
+        
+        <form id="research-form" class="research-form">
+          <div class="input-group">
+            <input type="text" id="company-name" placeholder="Enter company name (e.g. Stripe, OpenAI)" required autocomplete="off">
+            <button type="submit" id="btn-run" class="btn-primary">
+              <span class="btn-text">Start Research</span>
+              <div class="btn-loader"></div>
+            </button>
+          </div>
+          <div id="rate-limit-info" class="rate-limit-badge" style="display: none; margin-top: 0.75rem;">
+            <span class="limit-dot"></span>
+            <span id="remaining-attempts-text">Remaining queries today: --/10</span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Logging Console & Stepper (Progress Output) -->
+      <section id="progress-container" class="card progress-card hidden">
+        <div class="progress-header">
+          <h3>RESEARCH STAGE PROGRESS</h3>
+          <div class="progress-percentage"><span id="progress-val">0</span>%</div>
+        </div>
+        <div class="progress-bar-track">
+          <div id="progress-fill" class="progress-bar-fill"></div>
+        </div>
+
+        <!-- Visual Stepper for Non-Technical Users -->
+        <div class="stepper">
+          <div class="step active" id="step-init">
+            <span class="step-num">1</span>
+            <span class="step-name">Queueing Job</span>
+          </div>
+          <div class="step" id="step-scraping">
+            <span class="step-num">2</span>
+            <span class="step-name">Cloud Scraper</span>
+          </div>
+          <div class="step" id="step-synthesis">
+            <span class="step-num">3</span>
+            <span class="step-name">AI Synthesis</span>
+          </div>
+          <div class="step" id="step-compiling">
+            <span class="step-num">4</span>
+            <span class="step-name">Completed</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Report Dashboard Area (Rendered dynamically) -->
+      <section id="dashboard-container" class="dashboard-wrapper hidden">
+        
+        <!-- Main Verdict Header Banner -->
+        <div class="verdict-banner">
+          <div class="verdict-main">
+            <div class="verdict-recommendation">
+              <span class="meta-label">INVESTMENT ACTION</span>
+              <h1 id="meta-verdict">INVEST</h1>
+            </div>
+            
+            <div class="verdict-score-container">
+              <span class="meta-label">RATING</span>
+              <div class="score-display">
+                <span id="meta-score-num">8</span><span class="score-scale">/10</span>
+              </div>
+              <div class="score-bar-track">
+                <div id="meta-score-bar" class="score-bar-fill" style="width: 80%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="verdict-quick-meta">
+            <div>
+              <span class="quick-label">COMPANY</span>
+              <span id="meta-company-name" class="quick-val">-</span>
+            </div>
+            <div>
+              <span class="quick-label">INDUSTRY</span>
+              <span id="meta-industry" class="quick-val">-</span>
+            </div>
+            <div>
+              <span class="quick-label">FOUNDED</span>
+              <span id="meta-founded" class="quick-val">-</span>
+            </div>
+            <div>
+              <span class="quick-label">WEBSITE</span>
+              <a id="meta-website" href="#" target="_blank" class="quick-val link">-</a>
+            </div>
+          </div>
+
+          <!-- Download Action Dashboard -->
+          <div class="verdict-actions no-print">
+            <button id="btn-download-pdf" class="btn-action">
+              <span class="action-icon">📄</span> Download PDF Report (Printable)
+            </button>
+          </div>
+        </div>
+
+        <!-- Strengths / Risks / Thesis Card -->
+        <div class="grid grid-2">
+          <div class="card thesis-card">
+            <h3>INVESTMENT THESIS</h3>
+            <p id="thesis-content" class="thesis-text">-</p>
+          </div>
+          
+          <div class="card strength-risk-card">
+            <div class="sr-sections">
+              <div class="sr-section">
+                <h4 class="strength-title">✦ KEY STRENGTHS</h4>
+                <ul id="strengths-list" class="styled-list positive">
+                  <!-- Strengths list -->
+                </ul>
+              </div>
+              <div class="sr-section">
+                <h4 class="risk-title">⚠ KEY RISKS</h4>
+                <ul id="risks-list" class="styled-list negative">
+                  <!-- Risks list -->
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Navigation Tabs -->
+        <nav class="dashboard-tabs">
+          <button class="tab-btn active" data-tab="tab-overview">OVERVIEW</button>
+          <button class="tab-btn" data-tab="tab-founders">FOUNDERS</button>
+          <button class="tab-btn" data-tab="tab-financials">FINANCIALS</button>
+          <button class="tab-btn" data-tab="tab-investors">INVESTORS</button>
+          <button class="tab-btn" data-tab="tab-market">MARKET & COMPETITION</button>
+          <button class="tab-btn" data-tab="tab-verification">CLAIMS VERIFICATION</button>
+          <button class="tab-btn" data-tab="tab-reputation">REPUTATION & FLAGS</button>
+        </nav>
+
+        <!-- Tabs Content Panels -->
+        <div class="tabs-content">
+          
+          <!-- OVERVIEW TAB -->
+          <div id="tab-overview" class="tab-panel active">
+            <div class="card inner-card">
+              <h3>BUSINESS PROFILE</h3>
+              <div class="grid grid-2">
+                <div class="profile-info-block">
+                  <label>Business Model</label>
+                  <p id="profile-business-model" class="info-val">-</p>
+                </div>
+                <div class="profile-info-block">
+                  <label>Value Proposition</label>
+                  <p id="profile-value-prop" class="info-val">-</p>
+                </div>
+              </div>
+              
+              <div class="profile-info-block text-block margin-top">
+                <label>Company Growth & Traction Overview</label>
+                <p id="profile-growth-traction" class="info-val-text">-</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FOUNDERS TAB -->
+          <div id="tab-founders" class="tab-panel">
+            <div id="founders-grid" class="grid grid-2">
+              <!-- Founder Profiles will be rendered here -->
+            </div>
+          </div>
+
+          <!-- FINANCIALS TAB -->
+          <div id="tab-financials" class="tab-panel">
+            <div class="card inner-card">
+              <h3>FINANCIAL SPREADSHEET (ESTIMATED / LEAKED DATA)</h3>
+              <div class="financials-grid">
+                <div class="fin-cell header">Metric</div>
+                <div class="fin-cell header">Details / Figures</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="The current level of investment backing (e.g. Seed, Series A, Series B).">Funding Stage <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-funding-stage" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="Total capital injected into the company since founding.">Total Raised <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-total-funding" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="The estimated worth of the company during the latest financing round.">Last Valuation <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-last-valuation" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="Annual Recurring Revenue: SaaS subscription income projected annually.">Estimated ARR <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-arr" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="Total annual sales from all business divisions.">Estimated Revenue <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-revenue" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="Year-over-Year percentage change in corporate revenue.">Revenue Growth (YoY) <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-growth" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="Percentage of revenue left after paying Direct Cost of Goods Sold.">Gross Margin % <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-margin" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="The net rate at which a loss-making company spends cash monthly.">Monthly Burn Rate <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-burn" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="The number of months a startup can survive before running out of funds.">Runway Estimate <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-runway" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="EBITDA, operating margins, or break-even status.">Profitability Profile <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-profitability" class="fin-cell val">-</div>
+                
+                <div class="fin-cell label">
+                  <span class="tooltip" data-tooltip="Lifetime Value (LTV) to Customer Acquisition Cost (CAC) efficiency index.">Unit Economics (LTV:CAC / Payback) <span class="info-icon">ⓘ</span></span>
+                </div>
+                <div id="fin-unit-economics" class="fin-cell val">-</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- INVESTORS TAB -->
+          <div id="tab-investors" class="tab-panel">
+            <div class="card inner-card">
+              <h3>NOTABLE CAPITALIZATION TABLE</h3>
+              <div id="investors-table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Investor Name</th>
+                      <th>Type</th>
+                      <th>Funding Round</th>
+                      <th>Reputation / Portfolio Track Record</th>
+                      <th>Exit / Secondary Market Signals</th>
+                    </tr>
+                  </thead>
+                  <tbody id="investors-tbody">
+                    <!-- Dynamic rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- MARKET & COMPETITION TAB -->
+          <div id="tab-market" class="tab-panel">
+            <div class="grid grid-2">
+              <div class="card inner-card">
+                <h3>MARKET OPPORTUNITY</h3>
+                <div class="metric-row">
+                  <div class="metric-box">
+                    <label>
+                      <span class="tooltip" data-tooltip="Total Addressable Market: The maximum possible market size for this industry.">TAM (Total Addressable) <span class="info-icon">ⓘ</span></span>
+                    </label>
+                    <span id="market-tam">-</span>
+                  </div>
+                  <div class="metric-box">
+                    <label>
+                      <span class="tooltip" data-tooltip="Serviceable Addressable Market: The portion of TAM that can be targeted by this product.">SAM (Serviceable) <span class="info-icon">ⓘ</span></span>
+                    </label>
+                    <span id="market-sam">-</span>
+                  </div>
+                </div>
+                <div class="metric-row">
+                  <div class="metric-box">
+                    <label>
+                      <span class="tooltip" data-tooltip="Compound Annual Growth Rate: The average yearly growth rate of the sector.">Market CAGR / Growth <span class="info-icon">ⓘ</span></span>
+                    </label>
+                    <span id="market-growth">-</span>
+                  </div>
+                  <div class="metric-box">
+                    <label>
+                      <span class="tooltip" data-tooltip="The company's estimated sales revenue divided by SAM.">Est. Market Share <span class="info-icon">ⓘ</span></span>
+                    </label>
+                    <span id="market-share">-</span>
+                  </div>
+                </div>
+                <div class="text-block margin-top">
+                  <label>Macro Trends</label>
+                  <p id="market-trends" class="info-val-text">-</p>
+                </div>
+                <div class="text-block margin-top">
+                  <label>Regulatory & Compliance Environment</label>
+                  <p id="market-regulatory" class="info-val-text">-</p>
+                </div>
+              </div>
+
+              <div class="card inner-card">
+                <h3>COMPETITORS & MOAT DEFENSE</h3>
+                <div class="competitors-block">
+                  <label>Direct & Indirect Competitors</label>
+                  <ul id="competitors-list" class="styled-list bullet">
+                    <!-- Competitors dynamic -->
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CLAIMS VERIFICATION TAB -->
+          <div id="tab-verification" class="tab-panel">
+            <div class="card inner-card">
+              <h3>PUBLIC CLAIMS VS SOURCE VERIFICATION</h3>
+              <p class="section-desc">Auditing company landing page metrics against independent Crunchbase, LinkedIn, and G2 news sources.</p>
+              <div id="claims-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40%;">Stated Corporate Claim</th>
+                      <th>Claim Source</th>
+                      <th>Verification Method</th>
+                      <th>Audit Status</th>
+                      <th>Notes / Context</th>
+                    </tr>
+                  </thead>
+                  <tbody id="claims-tbody">
+                    <!-- Dynamic claims -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- REPUTATION & FLAGS TAB -->
+          <div id="tab-reputation" class="tab-panel">
+            <div class="grid grid-2">
+              <div class="card inner-card">
+                <h3>SOCIAL & COMMUNITY SENTIMENT</h3>
+                <div class="rep-sentiment-row">
+                  <label>LinkedIn Company Signals</label>
+                  <p id="rep-linkedin" class="info-val-text">-</p>
+                </div>
+                <div class="rep-sentiment-row">
+                  <label>Customer Feedback (G2/Trustpilot)</label>
+                  <p id="rep-customer" class="info-val-text">-</p>
+                </div>
+                <div class="rep-sentiment-row">
+                  <label>Employee Sentiment (Glassdoor/Reddit)</label>
+                  <p id="rep-employee" class="info-val-text">-</p>
+                </div>
+              </div>
+
+              <div class="card inner-card border-warning">
+                <h3 class="warning-header">⚠ RISK EVALUATION & RED FLAGS</h3>
+                <div class="red-flags-block">
+                  <label>Identified Risk Signals</label>
+                  <ul id="redflags-list" class="styled-list warning-list">
+                    <!-- Dynamic flags -->
+                  </ul>
+                </div>
+                <div class="reality-check-block margin-top">
+                  <label class="warning-label">CRITICAL REALITY CHECK</label>
+                  <p id="rep-reality-check" class="reality-check-text">-</p>
+                </div>
+                <div class="controversies-block margin-top">
+                  <label class="warning-label">PUBLIC CRITICISMS & CONTROVERSIES</label>
+                  <ul id="controversies-list" class="styled-list negative">
+                    <!-- Dynamic criticisms -->
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer id="app-footer" class="app-footer hidden">
+    <p>Powered by Google Gemini 3.5 & Browser-Use Agent Platform. All rights reserved.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

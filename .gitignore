@@ -1,0 +1,35 @@
+# Environment Secrets
+.env
+.env.local
+.env.*.local
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vercel/
+
+# Python files, virtual environment & cache
+*.py
+myvenv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Intermediate Raw Scrapes & Investment Reports (Local cache outputs)
+*_raw_research.json
+*_investment_report.json
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

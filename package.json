@@ -1,0 +1,17 @@
+{
+  "name": "investment-research-agent",
+  "version": "1.0.0",
+  "description": "Node.js website version of the Investment Research Agent",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@google/genai": "*",
+    "browser-use-sdk": "*",
+    "dotenv": "*",
+    "express": "*"
+  }
+}
